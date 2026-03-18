@@ -7,9 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function setupEventListeners() {
-    moodInput.addEventListener('input', function () {
-        updateSearchButton();
-    });
+    moodInput.addEventListener('input', updateSearchButton);
 
     moodInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -44,7 +42,7 @@ async function handleSearch() {
     const prompt = JSON.stringify({ userPrompt: mood });
 
     try {
-        const response = await fetch('https://juliasvgomes.app.n8n.cloud/webhook/botflix', {
+        const response = await fetch('https://hook.us2.make.com/88u1tjiz777i1ls5dif9cj1etwarvk5r', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -52,11 +50,21 @@ async function handleSearch() {
             body: prompt
         });
 
-        const data = await response.json();
+        // Primeiro pegamos o texto puro para ver se o JSON é válido
+        const text = await response.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error('O Make enviou um JSON inválido:', text);
+            throw new Error('Erro de formato no Make. Verfique o console.');
+        }
 
+        // Buscando a lista de filmes (pode vir como 'results' ou 'movie')
+        const results = data.results || data.movie;
 
-        if (data && Array.isArray(data.results) && data.results.length > 0) {
-            const movie = data.results[0];
+        if (data && Array.isArray(results) && results.length > 0) {
+            const movie = results[0];
 
             let posterUrl = movie.poster_path || '';
             if (posterUrl && !/^https?:\/\//.test(posterUrl)) {
@@ -75,7 +83,7 @@ async function handleSearch() {
                         <div class="movie-info">
                             <h4 class="movie-title">${movie.title}</h4>
                             <p class="movie-overview">${movie.overview || 'Sem descrição disponível.'}</p>
-                            <p class="movie-rating">⭐ ${typeof movie.vote_average === 'number' ? movie.vote_average.toFixed(1) : 'N/A'} / 10</p>
+                            <p class="movie-rating">⭐ ${movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'} / 10</p>
                         </div>
                     </div>
                 `;
